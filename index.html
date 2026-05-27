@@ -423,12 +423,14 @@
       data: new Date().toISOString()
     };
 
-    // (Futuro) Envia ao Apps Script sem travar o redirecionamento ao WhatsApp.
+    // Envia ao Apps Script. "keepalive" garante que a requisição
+    // termine mesmo com o redirecionamento ao WhatsApp logo em seguida.
     if (APPSCRIPT_URL) {
       try {
         fetch(APPSCRIPT_URL, {
           method: "POST",
           mode: "no-cors",
+          keepalive: true,
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(dados)
         });
@@ -441,9 +443,17 @@
       `*Nome:* ${dados.nome}\n` +
       `*Telefone:* ${dados.telefone}`;
 
-    const url = `https://wa.me/${WHATSAPP_EMPRESA}?text=${encodeURIComponent(msg)}`;
-    window.location.href = url;
+    window.location.href = montarLinkWhatsapp(WHATSAPP_EMPRESA, msg);
   });
+
+  // Link de WhatsApp que funciona no celular (app) e no computador (WhatsApp Web).
+  function montarLinkWhatsapp(numero, texto) {
+    const t = encodeURIComponent(texto);
+    const ehMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+    return ehMobile
+      ? `https://wa.me/${numero}?text=${t}`
+      : `https://web.whatsapp.com/send?phone=${numero}&text=${t}`;
+  }
 </script>
 </body>
 </html>
